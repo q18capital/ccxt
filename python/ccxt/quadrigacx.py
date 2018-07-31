@@ -215,6 +215,13 @@ class quadrigacx (Exchange):
 
     def fetch_order(self, id, symbol=None, params={}):
         order = self.privatePostLookupOrder(self.extend({'id': id}, params))[0]
+        if symbol is not None:
+            symbol_local = symbol.lower().replace('/', '_')
+            transaction = self.private_post_user_transactions(self.extend({'limit': 3, 'book': symbol_local}))
+        else:
+            transaction = self.private_post_user_transactions(self.extend({'limit': 3}))
+        trans_order = [x for x in transaction if x['order_id'] == id]
+        filled = 0 if len(trans_order) == 0 else abs(float(trans_order[0][symbol_local.split('_')[0]]))
         status = {
             '-1': 'canceled',
             '0': 'open',
@@ -228,7 +235,8 @@ class quadrigacx (Exchange):
             'datetime': order['created'],
             'side': 'buy' if order['type'] == '0' else 'sell',
             'price': float(order['price']),
-            'status': status[order['status']]
+            'status': status[order['status']],
+            'filled': filled
         }
         return order_dict
         

@@ -12,6 +12,7 @@ try:
 except NameError:
     basestring = str  # Python 2
 import json
+import time
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import AuthenticationError
 
@@ -215,9 +216,11 @@ class quadrigacx (Exchange):
 
     def fetch_order(self, id, symbol=None, params={}):
         order = self.privatePostLookupOrder(self.extend({'id': id}, params))[0]
+        time.sleep(self.rateLimit / 1000)
         if symbol is not None:
             symbol_local = symbol.lower().replace('/', '_')
-            transaction = self.private_post_user_transactions(self.extend({'limit': 3, 'book': symbol_local}))
+            transaction = self.private_post_user_transactions(
+                self.extend({'limit': 3, 'book': symbol_local, 'nonce': self.nonce()}))
         else:
             transaction = self.private_post_user_transactions(self.extend({'limit': 3}))
         trans_order = [x for x in transaction if x['order_id'] == id]

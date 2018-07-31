@@ -213,6 +213,26 @@ class quadrigacx (Exchange):
             'id': str(response['id']),
         }
 
+    def fetch_order(self, id, symbol=None, params={}):
+        order = self.privatePostLookupOrder(self.extend({'id': id}, params))[0]
+        status = {
+            '-1': 'canceled',
+            '0': 'open',
+            '1': 'open',
+            '2': 'closed'
+        }
+        order_dict = {
+            'id': id,
+            'amount': float(order['amount']),
+            'symbol': order['book'].upper().replace('_', '/'),
+            'datetime': order['created'],
+            'side': 'buy' if order['type'] == '0' else 'sell',
+            'price': float(order['price']),
+            'status': status[order['status']]
+        }
+        return order_dict
+        
+
     def cancel_order(self, id, symbol=None, params={}):
         return self.privatePostCancelOrder(self.extend({
             'id': id,
